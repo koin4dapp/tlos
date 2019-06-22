@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src='dist-web/eosjs-api.js'></script>
+	<script src='dist-web/eosjs-jsonrpc.js'></script>
+	<script src='dist-web/eosjs-jssig.js'></script>
+</head>
+<body>
+<script>
+	// Default configuration, I use for Koin4Dapp change to adapt your needs
+	const account = 'your 12 character account name';
+	const defaultPrivateKey = "Put Your Private Key Here";
+	const rpc = new eosjs_jsonrpc.JsonRpc('https://telos.greymass.com');
+	const signatureProvider = new eosjs_jssig.JsSignatureProvider([defaultPrivateKey]);
+	const api = new eosjs_api.Api({ rpc, signatureProvider });	
+	
+	(async () => {
+		api.transact(
+			{
+				actions: [{
+					account: 'eosio.token',
+					name: 'transfer',
+					authorization: [{
+					  actor: account,
+					  permission: 'active'
+					}],
+					data: {
+					  from: account,
+					  to: 'koin4kontrak',
+					  quantity: '1.0000 TLOS',
+					  memo: 'deposit'
+					}
+				  }]
+			}, {
+				blocksBehind: 3,
+				expireSeconds: 30,
+			}
+		).then(result=>{
+			console.log(result);
+			return result;
+			}
+		).catch(error=>{
+			console.log(error);
+			}
+		)
+	})();
+</script>
+</body>
+</html>
