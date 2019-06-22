@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="https://cdn.jsdelivr.net/npm/eosjs@16.0.0/lib/eos.min.js"></script>
+	<script src="https://cdn.scattercdn.com/file/scatter-cdn/js/latest/scatterjs-core.min.js"></script>
+	<script src="https://cdn.scattercdn.com/file/scatter-cdn/js/latest/scatterjs-plugin-eosjs.min.js"></script>
+</head>
+<body>
+</p>Your Contract Account:<input type="text" id="account"/></p>
+</p>Your WASM file:<input type="file" id="wasmfile"/></p>
+</p>Your ABI file:<input type="file" id="abifile" /></p>
+<input type="button" id="startdeploy" value="Start Deploy"/>
+<script>
+  var wasm,abi;
+  
+  function readWasmFile(evt) {
+    //Retrieve the first (and only!) File from the FileList object
+    var f = evt.target.files[0]; 
+
+    if (f) {
+      var r = new FileReader();
+      r.onload = function(e) { 
+	      wasm = e.target.result;
+		  console.log(wasm);        
+      }	  
+      r.readAsBinaryString(f);
+    } else { 
+      alert("Failed to load WASM file");
+    }
+  }
+  
+  function readAbiFile(evt) {
+    //Retrieve the first (and only!) File from the FileList object
+    var f = evt.target.files[0]; 
+
+    if (f) {
+      var r = new FileReader();
+      r.onload = function(e) { 
+	      abi = JSON.parse(e.target.result);
+		  console.log(abi);        
+      }	  
+      r.readAsText(f);
+    } else { 
+      alert("Failed to load ABI file");
+    }
+  }  
+
+  document.getElementById('wasmfile').addEventListener('change', readWasmFile, false);
+  document.getElementById('abifile').addEventListener('change', readAbiFile, false);
+</script>
+<script>
+	// Default configuration, change to adapt your needs
+	const config = {
+	  chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11', // meetone
+	  keyProvider: ['Put Your Private key here'], //your private key
+	  httpEndpoint: 'https://telos.greymass.com',
+	  expireInSeconds: 60,
+	  broadcast: true,
+	  verbose: false, // API activity
+	  sign: true
+	}
+	var eos = Eos(config)
+	
+	function startdeploy() {
+		var account = document.getElementById("account").value;
+		eos.transaction(tr=> {
+				tr.setcode(account, 0, 0, wasm);
+				tr.setabi(account, abi);
+			}
+		).then(result=>{
+			console.log(result);
+			return result;
+			}
+		).catch(error=>{
+			console.log(error);
+			}
+		)
+	}
+	
+	document.getElementById('startdeploy').addEventListener('click', startdeploy, false);
+</script>
+</body>
+</html>
