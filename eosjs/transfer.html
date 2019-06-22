@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="https://cdn.jsdelivr.net/npm/eosjs@16.0.0/lib/eos.min.js"></script>
+</head>
+<body>
+<script>
+	// Default configuration, I use for Koin4Dapp change to adapt your needs
+	var account="your 12 character account name";
+	const config = {
+	  chainId: '4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11', // tlos
+	  keyProvider: ['Put Your Private key here'], //your private key
+	  httpEndpoint: 'https://telos.greymass.com',
+	  expireInSeconds: 60,
+	  broadcast: true,
+	  verbose: false, // API activity
+	  sign: true
+	}
+	eos = Eos(config)
+	
+	eos.transaction(
+	  {
+		actions: [
+		  {
+			account: 'eosio.token',
+			name: 'transfer',
+			authorization: [{
+			  actor: account,
+			  permission: 'active'
+			}],
+			data: {
+			  from: account,
+			  to: 'koin4kontrak',
+			  quantity: '1.0000 TLOS',
+			  memo: 'deposit'
+			}
+		  }
+		]
+	  }).then(result=>{
+        console.log(result);
+        return result;
+      }).catch(error=>{
+      console.log(error);
+    })
+</script>
+</body>
+</html>
