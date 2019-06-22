@@ -1,0 +1,29 @@
+<html>
+<script>
+
+function download(content, fileName, contentType) {
+    var a = document.createElement("a");
+    var file = new Blob([content], {type: contentType});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+var data = "{\"account_name\":\"koin4kontrak\"}";
+
+var xhr = new XMLHttpRequest();
+
+xhr.addEventListener("readystatechange", function () {
+  if (this.readyState === this.DONE) {
+    console.log(this.responseText);
+	download(JSON.stringify(JSON.parse(this.responseText).abi),'code.abi','application/octet-stream');
+  }
+});
+
+xhr.open("POST", "https://telos.greymass.com/v1/chain/get_abi");
+xhr.setRequestHeader("accept", "application/json");
+xhr.setRequestHeader("content-type", "application/json");
+
+xhr.send(data);
+</script>
+</html>

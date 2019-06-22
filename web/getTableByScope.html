@@ -1,0 +1,19 @@
+<html>
+<script>
+var data = "{\"code\":\"koin4kontrak\",\"table\":\"\"}";
+
+var xhr = new XMLHttpRequest();
+
+xhr.addEventListener("readystatechange", function () {
+  if (this.readyState === this.DONE) {
+    console.log(this.responseText);
+  }
+});
+
+xhr.open("POST", "https://telos.greymass.com/v1/chain/get_table_by_scope");
+xhr.setRequestHeader("accept", "application/json");
+xhr.setRequestHeader("content-type", "application/json");
+
+xhr.send(data);
+</script>
+</html>

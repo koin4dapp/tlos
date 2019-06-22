@@ -1,0 +1,18 @@
+<html>
+<script>
+var data = "{\"id\":\"cd4c133d3d5d4dd442e24d64acf820e9dcc8369842b94c133dd1e51098e00d5c\"}";
+
+var xhr = new XMLHttpRequest();
+
+xhr.addEventListener("readystatechange", function () {
+  if (this.readyState === this.DONE) {
+    console.log(this.responseText);
+  }
+});
+xhr.open("POST", "https://telos.greymass.com/v1/history/get_transaction");
+xhr.setRequestHeader("accept", "application/json");
+xhr.setRequestHeader("content-type", "application/json");
+
+xhr.send(data);
+</script>
+</html>
