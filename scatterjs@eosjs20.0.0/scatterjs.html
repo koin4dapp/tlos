@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<script src='dist-web/eosjs-api.js'></script>
+<script src='dist-web/eosjs-jsonrpc.js'></script>
+<script src="https://cdn.scattercdn.com/file/scatter-cdn/js/latest/scatterjs-core.min.js"></script>
+<script src="https://cdn.scattercdn.com/file/scatter-cdn/js/latest/scatterjs-plugin-eosjs2.min.js"></script>
+</html>
+<body>
+<!--caution, this sample try to open account on koin4kontrak smart contract on TLOS mainnet-->
+<input type="button" value="Login" id="login"/>
+<p>Welcome:<span id="accountname">~</span></p>
+<input type="button" value="Open Account" id="openaccount"/>
+<input type="button" value="Deposit" id="deposit"/>
+<input type="button" value="Withdraw" id="withdraw"/>
+<input type="button" value="Logout" id="logout"/>
+<div id="logger"></div>
+<script>
+	function elem(id) { return document.getElementById(id); }
+	elem("login").addEventListener('click',(e) => { login(); e.preventDefault();}, false);
+	elem("openaccount").addEventListener('click',(e) => { openaccount('4,KOIN'); e.preventDefault();}, false);
+	elem("deposit").addEventListener('click',(e) => { deposit('1.0000 TLOS'); e.preventDefault();}, false);
+	elem("withdraw").addEventListener('click',(e) => { withdraw('100.0000 KOIN'); e.preventDefault();}, false);
+	elem("logout").addEventListener('click',(e) => { logout(); e.preventDefault();}, false);
+</script>
+<script>
+	ScatterJS.plugins( new ScatterEOS() );
+
+	const network = ScatterJS.Network.fromJson({
+		blockchain:'eos',
+		chainId:'4667b205c6838ef70ff7988f6e8257e8be0e1284a2f59699054a018f743b1d11', //TLOS
+		host:'api.eos.miami',
+		port:443,
+		protocol:'https'
+	});
+
+	const rpc = new eosjs_jsonrpc.JsonRpc(network.fullhost());
+	const getApi = (signatureProvider) => new eosjs_api.Api({ rpc, signatureProvider });
+	const getScatterEos = () => scatter.eos(network, eosjs_api.Api, {rpc});
+	
+	let scatter, scatterConnect;
+	//initilize scatter
+	ScatterJS.connect('koin4dapp', {network}).then(connected => {
+		if(!connected) return console.error('no scatter');
+		scatter = ScatterJS.scatter;
+		scatterConnect = getScatterEos();		
+	});	
+
+	function login() {
+		ScatterJS.login().then(id => {
+			if(!id) return console.error('no identity');				
+				elem("accountname").innerText= getAccountName();
+			}).catch(err => {
+				console.error('error: ', err);
+			});
+	}
+	
+	function logout() {
+		if (scatter.identity) {
+			(async () => {
+				await scatter.forgetIdentity();
+				elem("accountname").innerText= "~";
+			})();
+		}
+	}
+	
+	function getAccountName() {
+		if (scatter.identity)
+			return scatter.identity.accounts[0].name;
+		else
+			return "unknown";
+	}
+
+	function getAccountAuthority() {
+		if (scatter.identity)
+			return scatter.identity.accounts[0].authority;
+		else
+			return "unknown";
+	}
+	
+	function error2String(obj) {
+		if (typeof obj === 'string' || obj instanceof String) 
+			return obj;
+		else
+			return JSON.stringify(obj);
+	}	
+	
+	function doAction(obj, callback) {
+		if (!scatter) {
+			alert('No Scatter detected!');
+		} else {
+			if (!scatter.identity) {
+				alert('Please login before!');
+			} else {				
+				(async () => {
+					await scatterConnect.transaction({
+					actions:obj
+					}).then(result => {
+						callback(result);
+					}).catch(error => {
+						alert(error2String(error));
+					});
+				})();
+			}
+		}
+	}
+	
+	function openaccount(symbol) {
+		doAction([
+				{
+					account: 'koin4kontrak',
+					name:    'open',
+					authorization: [{
+						actor:      getAccountName(),
+						permission: getAccountAuthority()
+					}],
+					data: {
+						owner: getAccountName(),
+						symbol: symbol,
+						ram_payer: getAccountName()
+					}
+				}
+		], function(result){		
+			const logger = elem("logger");
+			logger.innerText = JSON.stringify(result);	
+		});
+	}
+
+	function deposit(quantity) {	
+		doAction([
+				{
+					account: 'eosio.token',
+					name:    'transfer',
+					authorization: [{
+						actor:      getAccountName(),
+						permission: getAccountAuthority()
+					}],
+					data: {
+						from: getAccountName(),
+						to: 'koin4kontrak',
+						quantity: quantity,
+						memo: 'deposit ' + quantity
+					}
+				}
+		], function(result){
+			const logger = elem("logger");
+			logger.innerText = JSON.stringify(result);
+			}
+		);
+	}
+
+	function withdraw(quantity) {
+		doAction([
+				{
+					account: 'koin4kontrak',
+					name:    'withdraw',
+					authorization: [{
+						actor:      getAccountName(),
+						permission: getAccountAuthority()
+					}],
+					data: {
+						holder: getAccountName(),
+						quantity: quantity
+					}
+				}
+		], function(result){
+			const logger = elem("logger");
+			logger.innerText = JSON.stringify(result);
+			}
+		);
+	}	
+</script>
+</body>
+</html>
